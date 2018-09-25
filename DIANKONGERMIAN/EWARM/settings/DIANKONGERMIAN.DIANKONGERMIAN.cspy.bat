@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\D-drive-21968\新建文件夹 (2)\common\bin\cspybat" -f "C:\Users\dfy\Desktop\save\cube实验\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.general.xcl" --backend -f "C:\Users\dfy\Desktop\save\cube实验\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.driver.xcl" 
+"C:\D-drive-21968\新建文件夹 (2)\common\bin\cspybat" -f "C:\Users\dfy\Desktop\save\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.general.xcl" --backend -f "C:\Users\dfy\Desktop\save\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\D-drive-21968\新建文件夹 (2)\common\bin\cspybat" -f "C:\Users\dfy\Desktop\save\cube实验\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.general.xcl" "--debug_file=%~1" --backend -f "C:\Users\dfy\Desktop\save\cube实验\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.driver.xcl" 
+"C:\D-drive-21968\新建文件夹 (2)\common\bin\cspybat" -f "C:\Users\dfy\Desktop\save\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.general.xcl" "--debug_file=%~1" --backend -f "C:\Users\dfy\Desktop\save\DIANKONGERMIAN\EWARM\settings\DIANKONGERMIAN.DIANKONGERMIAN.driver.xcl" 
 
 @echo off 
 :end
