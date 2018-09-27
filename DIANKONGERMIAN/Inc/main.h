@@ -64,6 +64,7 @@
  extern "C" {
 #endif
 void _Error_Handler(char *, int);
+void send_wave(float arg1,float arg2,float arg3,float arg4);
 
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 #ifdef __cplusplus

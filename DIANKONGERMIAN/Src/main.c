@@ -39,8 +39,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx_hal.h"
+    
 
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -52,7 +56,10 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+char buffer_rx_temp;
+float P_out=0.8;
+  float I_out=0;
+  float D_out=0.1;//PID参数设置
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -168,7 +175,7 @@ void SystemClock_Config(void)
 
     /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);//时钟设置
 
     /**Configure the Systick 
     */
@@ -196,7 +203,7 @@ static void MX_NVIC_Init(void)
   /* TIM4_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(TIM4_IRQn);
-}
+}//中断设置系列
 
 /* TIM2 init function */
 static void MX_TIM2_Init(void)
@@ -231,6 +238,8 @@ static void MX_TIM2_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
+ HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_2);
 
 }
 
@@ -308,7 +317,7 @@ static void MX_USART1_UART_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
+HAL_UART_Receive_IT(&huart1,(uint8_t *)&buffer_rx_temp,1);//第一次开启中断
 }
 
 /** Configure pins as 
@@ -341,6 +350,105 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
+
+
+
+char uart_buffer[100 + 1];
+void uprintf(char *fmt, ...)
+{
+	int size;
+	
+	va_list arg_ptr;
+	
+	va_start(arg_ptr, fmt);  
+	
+	size=vsnprintf(uart_buffer, 100 + 1, fmt, arg_ptr);
+	va_end(arg_ptr);
+    HAL_UART_Transmit(&huart1,(uint8_t *)uart_buffer,size,1000);
+}//重写的uprint替代print
+void TIM_PWM_PIDSET(uint32_t TIMx, uint32_t CCRx, uint32_t PWM_Pluse)
+{ float kp=0.2;
+float ki=0;
+float kd=0.1;
+if(TIMx==4)
+{if(CCRx==2)
+{
+  float now=TIM4->CCR2;//读取当前ccr2的值
+  while(TIM4->CCR2!=PWM_Pluse)
+  {
+    TIM4->CCR2=(uint32_t)(PWM_Pluse+(PWM_Pluse-now)*kp+now*ki+(PWM_Pluse-now)*kd);
+  }//增量式的PID
+}
+}
+
+}
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+   if(huart->Instance==USART1){  
+    if(buffer_rx_temp=='a'){
+       uprintf("hello,world!\r\n");//试用uprint
+      }
+       if(buffer_rx_temp=='s')
+       {  uprintf("scanf TIMx CCRx Pluse!\r\n");//试用uprint
+         int a=4;
+       int b=2;
+       int c=150;//暂时自定
+        // scanf("%d%d%d",&a,&b,&c);
+       uprintf("control!\r\n");//试用uprint
+          TIM_PWM_PIDSET(a,b,c);
+       }
+  }
+  
+   HAL_UART_Receive_IT(&huart1,(uint8_t *)&buffer_rx_temp,1);
+}//试写的回调函数
+char s[22]={'b','y',16,6};
+void send_wave(float arg1,float arg2,float arg3,float arg4){
+
+  s[2]=16;  //length
+  s[3]=6;   //type
+  s[20]='\r';
+  s[21]='\n';
+  memcpy(s+4,&arg1,sizeof(arg1));
+  memcpy(s+8,&arg2,sizeof(arg1));
+  memcpy(s+12,&arg3,sizeof(arg1));
+  memcpy(s+16,&arg4,sizeof(arg1));
+  HAL_UART_Transmit(&huart1,(uint8_t *)s, 22,1000);
+
+}//用于发送给虚拟示波器
+void HAL_SYSTICK_Callback(void)
+{
+
+   static int time_1ms;
+  int speed=0x7FFF;
+  time_1ms++;
+  if(time_1ms==10){
+    float kp=0.12;
+float ki=0.00022;
+float kd=0.0035;
+
+  float now=TIM4->CCR2;//读取当前ccr2的值
+  
+
+
+    time_1ms=0;
+    speed=TIM2->CNT-0x7FFF;
+    int err1=-1000-speed;
+   static int  err2=0;
+   static int err3=0;
+      TIM4->CCR2=(uint32_t)(kp*err1+ki*err3-kd*(err1-err2));
+  //PID,半速CNT为-1158
+     err2=err1;
+     err3=err3+err1;
+   //uprintf("speed=%d\r\n",speed);
+    
+  send_wave((float)speed,(float)-1000,0,0);
+  TIM2->CNT=0X7FFF;
+  }
+
+}//时钟滴答中断
+
 
 /* USER CODE END 4 */
 
