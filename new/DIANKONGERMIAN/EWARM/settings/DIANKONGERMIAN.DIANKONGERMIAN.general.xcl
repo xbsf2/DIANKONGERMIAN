@@ -1,0 +1,15 @@
+"C:\D-drive-21968\新建文件夹 (2)\arm\bin\armproc.dll" 
+
+"C:\D-drive-21968\新建文件夹 (2)\arm\bin\armjlink2.dll" 
+
+"C:\Users\dfy\Desktop\save\new\DIANKONGERMIAN\EWARM\DIANKONGERMIAN\Exe\DIANKONGERMIAN.out" 
+
+--plugin "C:\D-drive-21968\新建文件夹 (2)\arm\bin\armbat.dll" 
+
+--device_macro "C:\D-drive-21968\新建文件夹 (2)\arm\config\debugger\ST\STM32F1xx_XL.dmac" 
+
+--flash_loader "C:\D-drive-21968\新建文件夹 (2)\arm\config\flashloader\ST\FlashSTM32F10xxC.board" 
+
+
+
+
