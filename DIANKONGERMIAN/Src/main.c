@@ -39,6 +39,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx_hal.h"
+  
     
 
 /* USER CODE BEGIN Includes */
@@ -57,9 +58,8 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 char buffer_rx_temp;
-float P_out=0.8;
-  float I_out=0;
-  float D_out=0.1;//PID参数设置
+int target1;//目标速度,应由位置环输入
+int location=1000000;//目标地点，CNT累计10000
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -127,7 +127,7 @@ int main(void)
   {
 
   /* USER CODE END WHILE */
-
+   //waibu();
   /* USER CODE BEGIN 3 */
 
   }
@@ -313,6 +313,7 @@ static void MX_USART1_UART_Init(void)
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  
   if (HAL_MultiProcessor_Init(&huart1, 0, UART_WAKEUPMETHOD_IDLELINE) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -369,16 +370,17 @@ void uprintf(char *fmt, ...)
     HAL_UART_Transmit(&huart1,(uint8_t *)uart_buffer,size,1000);
 }//重写的uprint替代print
 void TIM_PWM_PIDSET(uint32_t TIMx, uint32_t CCRx, uint32_t PWM_Pluse)
-{ float kp=0.2;
-float ki=0;
-float kd=0.1;
-if(TIMx==4)
-{if(CCRx==2)
+{ 
+   //float kp=0.2;
+//float ki=0;
+//float kd=0.1;
+//if(TIMx==4)
+{//if(CCRx==2)
 {
-  float now=TIM4->CCR2;//读取当前ccr2的值
-  while(TIM4->CCR2!=PWM_Pluse)
+  //float now=TIM4->CCR2;//读取当前ccr2的值
+  //while(TIM4->CCR2!=PWM_Pluse)
   {
-    TIM4->CCR2=(uint32_t)(PWM_Pluse+(PWM_Pluse-now)*kp+now*ki+(PWM_Pluse-now)*kd);
+   // TIM4->CCR2=(uint32_t)(PWM_Pluse+(PWM_Pluse-now)*kp+now*ki+(PWM_Pluse-now)*kd);
   }//增量式的PID
 }
 }
@@ -391,13 +393,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
        uprintf("hello,world!\r\n");//试用uprint
       }
        if(buffer_rx_temp=='s')
-       {  uprintf("scanf TIMx CCRx Pluse!\r\n");//试用uprint
-         int a=4;
-       int b=2;
-       int c=150;//暂时自定
-        // scanf("%d%d%d",&a,&b,&c);
-       uprintf("control!\r\n");//试用uprint
-          TIM_PWM_PIDSET(a,b,c);
+       {  target1=-500;
        }
   }
   
@@ -420,33 +416,39 @@ void send_wave(float arg1,float arg2,float arg3,float arg4){
 void HAL_SYSTICK_Callback(void)
 {
 
+
    static int time_1ms;
   int speed=0x7FFF;
+  static int juli=0;//当前走过的路程
   time_1ms++;
   if(time_1ms==10){
     float kp=0.12;
 float ki=0.00022;
 float kd=0.0035;
 
-  float now=TIM4->CCR2;//读取当前ccr2的值
-  
-
-
     time_1ms=0;
-    speed=TIM2->CNT-0x7FFF;
-    int err1=-1000-speed;
-   static int  err2=0;
+  speed=TIM2->CNT-0x7FFF;
+  
+    //juli=juli+speed;
+    //int derr1=location+juli;
+  //  if(derr1>=250000)
+  //  {target1=-(uint32_t)derr1*0.0000001;}
+  //  else if()//根据距离得出目标速度
+  //位置环，得出目标速度
+    
+    int err1=target1-speed;//target为全局变量,-1000
+    int  err2=0;
    static int err3=0;
-      TIM4->CCR2=(uint32_t)(kp*err1+ki*err3-kd*(err1-err2));
+      TIM4->CCR2=(uint32_t)(kp*err1+ki*err3-kd*(err1-err2));//速度环，得出目标占空比
   //PID,半速CNT为-1158
      err2=err1;
      err3=err3+err1;
    //uprintf("speed=%d\r\n",speed);
+     //速度环，得出目标占空比
     
-  send_wave((float)speed,(float)-1000,0,0);
+  send_wave((float)speed,(float)target1,(float)derr1,0);
   TIM2->CNT=0X7FFF;
   }
-
 }//时钟滴答中断
 
 
